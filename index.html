@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Conversor UTM para Lat/Lon</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.2/brython.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.2/brython_stdlib.min.js"></script>
+    <script type="text/python">
+        import pyproj
+
+        # Definir sistema de coordenadas UTM e WGS84
+        utm = pyproj.Proj(proj='utm', zone='24M', ellps='WGS84', preserve_units=False)
+        wgs84 = pyproj.Proj(proj='latlong', datum='WGS84', ellps='WGS84')
+
+        def converterCoordenadas():
+            # Coordenadas UTM
+            utm_northing = float(document.getElementById('utmNorthing').value)
+            utm_easting = float(document.getElementById('utmEasting').value)
+
+            # Converter UTM para latitude e longitude
+            longitude, latitude = pyproj.transform(utm, wgs84, utm_easting, utm_northing)
+
+            # Preencher os campos de Latitude e Longitude
+            document.getElementById('latitude').value = str(latitude)
+            document.getElementById('longitude').value = str(longitude)
+
+    </script>
+</head>
+<body onload="brython()">
+    <h1>Conversor UTM para Lat/Lon</h1>
+    <label>Coordenada Leste (Easting):</label>
+    <input type="text" id="utmEasting"><br>
+    <label>Coordenada Norte (Northing):</label>
+    <input type="text" id="utmNorthing"><br>
+    <button onclick="converterCoordenadas()">Converter</button><br>
+    <label>Latitude:</label>
+    <input type="text" id="latitude" disabled><br>
+    <label>Longitude:</label>
+    <input type="text" id="longitude" disabled><br>
+</body>
+</html>
