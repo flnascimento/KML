@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Conversão de Coordenadas UTM</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+  
+    .container {
+      margin-top: 20px;
+    }
+  
+    label {
+      font-weight: bold;
+    }
+  
+    input[type="text"] {
+      padding: 5px;
+      margin-right: 10px;
+    }
+  
+    button {
+      padding: 5px 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  
+    button:hover {
+      background-color: #45a049;
+    }
+  
+    textarea {
+      width: 300px;
+      height: 150px;
+      resize: none;
+      margin-top: 10px;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.5/proj4.js"></script>
+  <script>
+    function converterCoordenadas() {
+      var coordenadasUTM = document.getElementById('coordenadasUTM').value;
+      var linhas = coordenadasUTM.split('\n');
+
+      var kmlContent = '<?xml version="1.0" encoding="UTF-8"?>\n';
+      kmlContent += '<kml xmlns="http://earth.google.com/kml/2.0">\n';
+      kmlContent += '  <Document>\n';
+      kmlContent += '    <name>Name</name>\n';
+
+      for (var i = 0; i < linhas.length; i++) {
+        var linha = linhas[i];
+        var partes = linha.split(",");
+
+        var zonaUTM = parseInt(partes[0].replace(/[A-Za-z]/g, ''));
+        var hemisferio = partes[0].charAt(partes[0].length - 1);
+        var lesteUTM = parseFloat(partes[1]);
+        var norteUTM = parseFloat(partes[2]);
+        var pontoNome = partes[3];
+
+        var projUTM = "+proj=utm +zone=" + zonaUTM + (hemisferio.toUpperCase() < 'N' ? " +south" : " +north");
+        var projWGS84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees";
+
+        var coordsUTM = [lesteUTM, norteUTM];
+        var coordsWGS84 = proj4(projUTM, projWGS84, coordsUTM);
+
+        var longitude = coordsWGS84[0].toFixed(13);
+        var latitude = coordsWGS84[1].toFixed(13);
+
+        kmlContent += '    <Folder>\n';
+        kmlContent += '      <name>' + pontoNome + '</name>\n';
+        kmlContent += '      <open>0</open>\n';
+        kmlContent += '      <Placemark>\n';
+        kmlContent += '        <name>' + pontoNome + '</name>\n';
+        kmlContent += '        <Style>\n';
+        kmlContent += '          <IconStyle>\n';
+        kmlContent += '            <Icon>\n';
+        kmlContent += '            </Icon>\n';
+        kmlContent += '          </IconStyle>\n';
+        kmlContent += '        </Style>\n';
+        kmlContent += '        <Point>\n';
+        kmlContent += '          <coordinates>\n';
+        kmlContent += '            ' + longitude + ',' + latitude + ',0.000  0.0000000000000,0.0000000000000,0.000\n';
+        kmlContent += '          </coordinates>\n';
+        kmlContent += '        </Point>\n';
+        kmlContent += '      </Placemark>\n';
+        kmlContent += '    </Folder>\n';
+      }
+
+      kmlContent += '  </Document>\n';
+      kmlContent += '</kml>';
+
+      var kmlBlob = new Blob([kmlContent], { type: 'text/xml' });
+      var kmlURL = URL.createObjectURL(kmlBlob);
+
+      var downloadLink = document.createElement('a');
+      downloadLink.href = kmlURL;
+      downloadLink.download = 'pontos.kml';
+      downloadLink.click();
+    }
+  </script>
+</head>
+<body>
+  <h1>Conversão de Coordenadas UTM para Latitude e Longitude</h1>
+  
+  <div class="container">
+    <label for="coordenadasUTM">Coordenadas UTM:</label>
+    <br>
+    <textarea id="coordenadasUTM" required></textarea>
+    <br>
+    <button onclick="converterCoordenadas()">Converter</button>
+  </div>
+</body>
+</html>
